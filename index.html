@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body>
+<title>Entradas LHDD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Archivo:wght@400;500;600;800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: una columna angosta tipo "taquilla" — cartel arriba, pasos de compra abajo, cada entrada como un talón perforado. */
+:root{
+  --bg:#0c1312;          /* negro con tinte verde piedra */
+  --panel:#141e1c;
+  --line:#2a3a37;
+  --stone:#c3d9c8;       /* el verde piedra de las letras del logo */
+  --stone-dim:#8fa69a;
+  --peach:#f2a07b;       /* el borde durazno del logo */
+  --globe:#1f9e8f;       /* el mar del planetita */
+  --fg:#e9f1ec;
+  --ok:#5fd39a; --warn:#f2c26b; --err:#ff8a7a;
+  --f-display:"Bungee","Impact","Arial Black",sans-serif;
+  --f-body:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+img{max-width:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.5}
+.wrap{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:24px 64px;display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{text-wrap:balance;margin:0}
+a{color:var(--peach)}
+button,input,select{font:inherit}
+:focus-visible{outline:2px solid var(--peach);outline-offset:2px}
+
+/* Cartel */
+.cartel{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.cartel img.logo{width:min(320px,80%);height:auto;display:block;-webkit-tap-highlight-color:transparent}
+.cartel .fecha{font-family:var(--f-display);font-size:clamp(22px,6vw,30px);color:var(--peach);letter-spacing:.02em;line-height:1.1}
+.datos{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;width:100%}
+.datos div{background:var(--panel);padding:10px 8px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.datos small{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--stone-dim)}
+.datos strong{font-weight:600;font-size:15px;overflow-wrap:anywhere}
+.dir{color:var(--stone-dim);font-size:14px}
+.foto{width:100%;border-radius:10px;display:block;aspect-ratio:3/2;object-fit:cover;max-width:100%}
+
+/* Pasos */
+.paso{display:flex;flex-direction:column;gap:14px}
+.paso-tit{display:flex;align-items:baseline;gap:10px}
+.paso-tit span{font-family:var(--f-display);color:var(--globe);font-size:14px}
+.paso-tit h2{font-family:var(--f-display);font-weight:400;font-size:20px;color:var(--stone)}
+
+.cant{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--stone);font-size:22px;cursor:pointer}
+.stepper button:disabled{opacity:.35;cursor:not-allowed}
+.stepper output{font-family:var(--f-display);font-size:28px;min-width:48px;text-align:center;color:var(--fg)}
+.precio{font-variant-numeric:tabular-nums;color:var(--stone-dim);font-size:14px}
+.precio b{color:var(--fg);font-size:18px;display:block}
+.quedan{margin:0;text-align:center;font-weight:600;color:var(--warn)}
+
+/* Talón de entrada (formulario) */
+.talon{position:relative;background:var(--stone);color:#10201c;border-radius:12px;padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px}
+.talon::before,.talon::after{content:"";position:absolute;top:50%;width:18px;height:18px;border-radius:50%;background:var(--bg);transform:translateY(-50%)}
+.talon::before{left:-9px}.talon::after{right:-9px}
+.talon header{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px dashed rgba(16,32,28,.3);padding-bottom:8px;gap:8px}
+.talon header b{font-family:var(--f-display);font-weight:400;font-size:15px}
+.talon header small{font-family:var(--f-mono);font-size:12px;opacity:.7}
+.fila{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:380px){.fila{grid-template-columns:1fr}}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;min-width:0}
+label .ayuda{text-transform:none;letter-spacing:0;font-weight:400;font-size:13px}
+input[type=text],input[type=email],input[type=tel],input[type=password],input[type=search]{width:100%;padding:11px 12px;border-radius:8px;border:1.5px solid rgba(16,32,28,.25);background:#eef5f0;color:#10201c;font-size:16px;text-transform:none;letter-spacing:0;font-weight:500}
+.talon input:focus{border-color:#10201c;outline:none}
+.contacto{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+.contacto label{color:var(--stone-dim)}
+.contacto input{background:var(--bg);color:var(--fg);border-color:var(--line)}
+.contacto input:focus{border-color:var(--peach);outline:none}
+
+.total{display:flex;justify-content:space-between;align-items:baseline;font-variant-numeric:tabular-nums;padding:4px 2px}
+.total span{color:var(--stone-dim)}
+.total b{font-family:var(--f-display);font-weight:400;font-size:26px;color:var(--peach)}
+.btn{display:inline-flex;justify-content:center;align-items:center;gap:8px;width:100%;padding:15px 18px;border-radius:12px;border:0;background:var(--peach);color:#2a120a;font-weight:800;font-size:17px;cursor:pointer;text-decoration:none;text-align:center}
+.btn:disabled{opacity:.5;cursor:wait}
+.btn.sec{background:transparent;color:var(--stone);border:1.5px solid var(--line);font-weight:600;font-size:15px}
+.btn.mp{background:#00b1ea;color:#fff}
+.msg{font-size:14px;padding:10px 12px;border-radius:8px}
+.msg.err{background:rgba(255,138,122,.12);color:var(--err)}
+.msg.info{background:rgba(31,158,143,.14);color:var(--stone)}
+
+/* Confirmación */
+.confirm{display:flex;flex-direction:column;gap:20px}
+.conf-head{text-align:center;display:flex;flex-direction:column;gap:6px}
+.conf-head h2{font-family:var(--f-display);font-weight:400;font-size:clamp(26px,7vw,34px);color:var(--peach);line-height:1.1}
+.conf-head p{margin:0;color:var(--stone)}
+.ticket{position:relative;background:var(--stone);color:#10201c;border-radius:14px;overflow:hidden;box-shadow:0 14px 40px rgba(0,0,0,.45)}
+.tk-top{display:flex;gap:12px;align-items:center;padding:16px;position:relative}
+.tk-logo{width:76px;height:76px;object-fit:cover;border-radius:10px;flex:none}
+.tk-ev{display:flex;flex-direction:column;gap:1px;min-width:0;font-size:14px}
+.tk-ev small{font-size:11px;text-transform:uppercase;letter-spacing:.12em;opacity:.7}
+.tk-ev b{font-family:var(--f-display);font-weight:400;font-size:24px;line-height:1.1}
+.tk-corte{position:relative;border-top:2px dashed rgba(16,32,28,.35);margin-inline:14px}
+.tk-corte::before,.tk-corte::after{content:"";position:absolute;top:-12px;width:22px;height:22px;border-radius:50%;background:var(--bg)}
+.tk-corte::before{left:-26px}.tk-corte::after{right:-26px}
+.tk-body{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+.tk-meta{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end}
+.tk-meta small{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.12em;opacity:.7}
+.tk-meta b{font-size:16px;overflow-wrap:anywhere}
+.tk-meta b.num{font-family:var(--f-mono);font-size:20px;font-variant-numeric:tabular-nums}
+.barras{height:40px;margin:0 16px 16px;display:flex;align-items:stretch;overflow:hidden}
+.barras i{background:#10201c;display:block;flex:none}
+.sello{position:absolute;right:10px;top:12px;font-family:var(--f-display);font-size:15px;color:#c2412b;border:3px solid #c2412b;border-radius:8px;padding:4px 10px;transform:rotate(-12deg);opacity:.85;letter-spacing:.06em;mix-blend-mode:multiply}
+@media (prefers-reduced-motion:no-preference){
+  .sello.golpe{animation:sello .5s cubic-bezier(.2,1.6,.4,1) .35s both}
+  @keyframes sello{from{transform:rotate(-12deg) scale(2.6);opacity:0}to{transform:rotate(-12deg) scale(1);opacity:.85}}
+  .ticket.entra{animation:tk .45s ease-out both}
+  @keyframes tk{from{transform:translateY(18px) rotate(1.5deg);opacity:0}to{transform:none;opacity:1}}
+  .talon{animation:entra .25s ease-out}
+  @keyframes entra{from{transform:translateY(6px);opacity:.6}to{transform:none;opacity:1}}
+}
+.lista-nombres{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px;font-size:16px;font-weight:600}
+.lista-nombres li{display:flex;gap:10px}
+.lista-nombres li span{font-family:var(--f-mono);opacity:.55;font-size:12px;padding-top:4px;font-weight:500}
+.pago{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 16px;display:flex;flex-direction:column;gap:14px}
+.pago h3{font-family:var(--f-display);font-weight:400;color:var(--stone);font-size:18px}
+.pago ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;color:var(--stone)}
+.pago ol b{color:var(--peach)}
+.mp-datos{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:10px}
+.mp-datos > div{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--line);min-width:0}
+.mp-datos > div:last-child{border-bottom:0}
+.mp-datos small{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--stone-dim);display:block}
+.mp-datos span{font-family:var(--f-mono);font-size:14px;overflow-wrap:anywhere;user-select:all}
+.copiar{flex:none;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--stone);cursor:pointer;font-size:13px}
+.cierre{text-align:center;color:var(--stone-dim);margin:0;font-size:15px}
+.agotado{text-align:center;border:2px dashed var(--peach);border-radius:14px;padding:24px 16px;display:flex;flex-direction:column;gap:8px}
+.agotado h2{font-family:var(--f-display);font-weight:400;font-size:clamp(34px,10vw,48px);color:var(--peach);transform:rotate(-3deg)}
+.agotado p{margin:0;color:var(--stone)}
+
+/* Panel de organización */
+.admin{display:flex;flex-direction:column;gap:16px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
+.stat small{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--stone-dim)}
+.stat b{display:block;font-family:var(--f-display);font-weight:400;font-size:24px;font-variant-numeric:tabular-nums}
+.filtros{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--stone);cursor:pointer;font-size:14px}
+.chip[aria-pressed=true]{background:var(--stone);color:#10201c;border-color:var(--stone)}
+.buscar{background:var(--panel)!important;color:var(--fg)!important;border-color:var(--line)!important}
+.reservas{display:flex;flex-direction:column;gap:10px}
+.res{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.res.pagado{border-left-color:var(--ok)}
+.res.vencida{border-left-color:var(--line);opacity:.75}
+.res-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.res-top b{font-size:17px;overflow-wrap:anywhere;min-width:0}
+.res-top .monto{font-family:var(--f-mono);font-size:17px;color:var(--peach);flex:none;font-variant-numeric:tabular-nums}
+.res-sub{font-size:13px;color:var(--stone-dim);overflow-wrap:anywhere}
+.res ul{margin:0;padding-left:18px;font-size:15px}
+.res-acc{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.res-acc .confirmar{flex:1 1 160px;padding:11px 14px;border-radius:10px;border:0;background:var(--ok);color:#06261a;font-weight:800;cursor:pointer;font-size:15px}
+.res-acc .deshacer{padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--stone-dim);cursor:pointer;font-size:13px}
+.res-acc a{font-size:14px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;text-decoration:none;color:var(--stone)}
+.badge{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:rgba(95,211,154,.16);color:var(--ok)}
+.badge.pend{background:rgba(242,194,107,.16);color:var(--warn)}
+.badge.venc{background:rgba(143,166,154,.16);color:var(--stone-dim)}
+.vacio{padding:24px;text-align:center;color:var(--stone-dim);border:1px dashed var(--line);border-radius:10px}
+.pie{text-align:center;font-size:13px;color:var(--stone-dim)}
+.demo{font-size:13px;text-align:center;color:var(--warn);border:1px dashed rgba(242,194,107,.4);border-radius:8px;padding:8px}
+</style>
+
+<div class="wrap">
+
+  <section class="cartel">
+    <img class="logo" src="img/logo.jpg" alt="Los Hijos del Dueño">
+    <div class="fecha" id="fecha"></div>
+    <div class="datos">
+      <div><small>Lugar</small><strong>SIMONA</strong></div>
+      <div><small>Puertas</small><strong>21:00</strong></div>
+      <div><small>Show</small><strong>22:00</strong></div>
+    </div>
+    <div class="dir">Av. Álvarez Thomas 661, CABA</div>
+  </section>
+
+  <div class="demo" id="avisoDemo" hidden>Modo prueba: las reservas se guardan solo en este navegador hasta que conectes la planilla.</div>
+
+  <section id="agotado" class="agotado" hidden>
+    <h2>AGOTADO</h2>
+    <p>Se vendieron todas las entradas para SIMONA. ¡Gracias por el aguante! Seguinos para la próxima fecha.</p>
+  </section>
+
+  <!-- ============ COMPRA ============ -->
+  <form id="compra" class="paso" novalidate>
+    <div class="paso-tit"><span>1</span><h2>¿Cuántas entradas?</h2></div>
+    <div class="cant">
+      <div class="stepper">
+        <button type="button" id="menos" aria-label="Una entrada menos">−</button>
+        <output id="cantidad" aria-live="polite">1</output>
+        <button type="button" id="mas" aria-label="Una entrada más">+</button>
+      </div>
+      <div class="precio">Precio por entrada<b id="precioUnit"></b></div>
+    </div>
+    <p class="quedan" id="quedan" hidden></p>
+
+    <div class="paso-tit"><span>2</span><h2>¿Quiénes vienen?</h2></div>
+    <p class="dir" style="margin:0">Cada entrada va a nombre de una persona. En la puerta se entra con nombre, apellido y DNI.</p>
+    <div id="talones" style="display:flex;flex-direction:column;gap:14px"></div>
+
+    <div class="paso-tit"><span>3</span><h2>¿Dónde te mandamos las entradas?</h2></div>
+    <div class="contacto">
+      <label for="email">Tu mail<span class="ayuda">Cuando confirmemos el pago te llegan acá todas las entradas.</span><input type="email" id="email" autocomplete="email" required></label>
+      <label for="tel">Tu WhatsApp<input type="tel" id="tel" autocomplete="tel" inputmode="tel" placeholder="11 1234-5678" required></label>
+      <label for="titular">¿A nombre de quién sale la transferencia?<span class="ayuda">El titular de la cuenta desde la que vas a pagar. Con esto encontramos tu pago.</span><input type="text" id="titular" autocomplete="name"></label>
+    </div>
+
+    <div class="total"><span>Total a transferir</span><b id="total"></b></div>
+    <div id="errCompra" class="msg err" hidden></div>
+    <button class="btn" type="submit" id="btnReservar">Reservar mis entradas</button>
+  </form>
+
+  <!-- ============ PAGO ============ -->
+  <section id="pantallaPago" class="confirm" hidden>
+    <div class="conf-head">
+      <h2 id="confTitulo">¡Ya estás en la cuadra!</h2>
+      <p id="confBajada">Te guardamos el lugar. Falta un solo paso: transferir.</p>
+    </div>
+
+    <article class="ticket" id="ticket" aria-label="Tu reserva">
+      <div class="tk-top">
+        <img src="img/logo.jpg" alt="" class="tk-logo">
+        <div class="tk-ev">
+          <small>Los Hijos del Dueño en</small>
+          <b>SIMONA</b>
+          <span id="tkFecha"></span>
+          <span>Puertas 21 h · Show 22 h</span>
+        </div>
+        <div class="sello" id="sello">RESERVADO</div>
+      </div>
+      <div class="tk-corte"></div>
+      <div class="tk-body">
+        <ul class="lista-nombres" id="resumenNombres"></ul>
+        <div class="tk-meta">
+          <div><small>Transfiere</small><b id="tkTitular"></b></div>
+          <div style="text-align:right"><small>Total</small><b class="num" id="totalPago"></b></div>
+        </div>
+      </div>
+      <div class="barras" id="barras" aria-hidden="true"></div>
+    </article>
+
+    <div class="pago">
+      <h3>Cómo pagar</h3>
+      <ol>
+        <li>Transferí <b class="monto"></b> al alias <b id="aliasPaso"></b> desde la cuenta de <b class="titularPaso"></b>.</li>
+        <li>Listo. Cuando veamos tu pago, te llegan las entradas al mail que pusiste. Si no las ves, revisá Spam o Promociones.</li>
+      </ol>
+      <a class="btn mp" id="linkMP" href="#" target="_blank" rel="noopener">Transferir con Mercado Pago</a>
+      <div class="mp-datos">
+        <div><div><small>Alias</small><span id="alias"></span></div><button class="copiar" type="button" data-copiar="alias">Copiar</button></div>
+        <div><div><small>CVU</small><span id="cvu"></span></div><button class="copiar" type="button" data-copiar="cvu">Copiar</button></div>
+        <div><div><small>Titular</small><span id="titularMP"></span></div></div>
+      </div>
+      <p class="dir" style="margin:0" id="avisoHoras"></p>
+    </div>
+
+    <p class="cierre">Nos vemos el <span id="cierreFecha"></span>: venimos buscando algún lío.</p>
+    <button class="btn sec" type="button" id="otraCompra">Hacer otra reserva</button>
+  </section>
+
+  <img class="foto" src="img/banda.jpg" alt="Los Hijos del Dueño" loading="lazy">
+
+  <!-- ============ ADMIN ============ -->
+  <section id="admin" class="admin" hidden>
+    <div class="paso-tit"><span>★</span><h2>Reservas</h2></div>
+    <form id="loginAdmin" class="contacto" novalidate>
+      <label for="clave">Clave de organización<input type="password" id="clave" autocomplete="current-password"></label>
+      <button class="btn" type="submit">Entrar</button>
+      <div id="errAdmin" class="msg err" hidden></div>
+    </form>
+    <div id="panelAdmin" hidden style="display:flex;flex-direction:column;gap:14px">
+      <div class="stats">
+        <div class="stat"><small>Pagadas</small><b id="sPagas">0</b></div>
+        <div class="stat"><small>Por cobrar</small><b id="sPend">0</b></div>
+        <div class="stat"><small>Quedan</small><b id="sQuedan">0</b></div>
+      </div>
+      <input type="search" id="buscar" class="buscar" placeholder="Buscar por nombre del que transfirió…" autocomplete="off" aria-label="Buscar reserva">
+      <div class="filtros" role="group" aria-label="Filtrar por estado">
+        <button class="chip" type="button" data-f="pendiente" aria-pressed="true">Por cobrar</button>
+        <button class="chip" type="button" data-f="pagado" aria-pressed="false">Pagadas</button>
+        <button class="chip" type="button" data-f="todas" aria-pressed="false">Todas</button>
+      </div>
+      <div id="msgAdmin" class="msg info" hidden role="status"></div>
+      <div class="reservas" id="reservas"></div>
+      <button class="btn" type="button" id="btnPDF">Descargar lista de puerta (PDF)</button>
+      <button class="btn sec" type="button" id="btnRefrescar">Actualizar</button>
+    </div>
+  </section>
+
+  <div class="pie">Los Hijos del Dueño · SIMONA · 19.11<br>¿Dudas? Escribinos a <span style="user-select:all;color:var(--stone)">loshijosdeldueno.ok@gmail.com</span></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script>
+/* =========================================================
+   CONFIGURACIÓN — lo único que tenés que tocar
+   ========================================================= */
+const CONFIG = {
+  FECHA: "Jueves 19 de noviembre",
+  FECHA_CORTA: "jueves 19",
+  PRECIO: 8000,                     // solo para mostrar: el precio real lo calcula el servidor
+  MAX_POR_COMPRA: 4,
+  HORAS_RESERVA: 24,
+  CUPO_DEMO: 100,                   // cupo del modo prueba (el real está en Code.gs)
+  // URL de la Web App de Google Apps Script. Vacía = modo prueba (guarda en este navegador).
+  API_URL: "",
+  MP_LINK: "https://mpago.la/2VMgrwS",
+  ALIAS: "lhdd.rock",
+  CVU: "0000003100051103877127",
+  TITULAR: "Juan Francisco Guarnuccio",
+  CLAVE_DEMO: "lhdd"                // solo para el modo prueba
+};
+
+/* ---------- utilidades ---------- */
+const $ = (id) => document.getElementById(id);
+const pesos = (n) => "$" + Number(n).toLocaleString("es-AR");
+const limpio = (s) => s.trim().replace(/\s+/g, " ");
+const titulo = (s) => limpio(s).toLowerCase().replace(/(^|\s|-)\p{L}/gu, (m) => m.toUpperCase());
+// "Gómez" y "gomez" tienen que coincidir en el buscador
+const normal = (s) => String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const MODO_DEMO = !CONFIG.API_URL;
+
+function nuevoId() { return Math.random().toString(36).slice(2, 10); }
+
+/* ---------- "backend": Apps Script o localStorage ---------- */
+const store = {
+  leerLocal() { try { return JSON.parse(localStorage.getItem("lhdd_entradas2") || "[]"); } catch { return []; } },
+  guardarLocal(arr) { try { localStorage.setItem("lhdd_entradas2", JSON.stringify(arr)); } catch {} },
+
+  async cupo() {
+    if (MODO_DEMO) return { ok: true, quedan: Math.max(0, CONFIG.CUPO_DEMO - ocupadas(this.leerLocal())) };
+    const r = await fetch(CONFIG.API_URL + "?accion=cupo");
+    return r.json();
+  },
+
+  async reservar(pedido) {
+    if (MODO_DEMO) {
+      const arr = this.leerLocal();
+      const quedan = CONFIG.CUPO_DEMO - ocupadas(arr);
+      if (pedido.asistentes.length > quedan) return { ok: false, error: "agotado", quedan: Math.max(0, quedan) };
+      const reserva = nuevoId();
+      const total = pedido.asistentes.length * CONFIG.PRECIO;
+      pedido.asistentes.forEach((a, i) => arr.push({
+        fecha: new Date().toISOString(), reserva, n: i + 1, apellido: a.apellido, nombre: a.nombre,
+        email: pedido.email, tel: pedido.tel, titular: pedido.titular, total, estado: "pendiente"
+      }));
+      this.guardarLocal(arr);
+      return { ok: true, reserva, total };
+    }
+    // text/plain evita el "preflight" de CORS que Apps Script no sabe responder
+    const r = await fetch(CONFIG.API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ accion: "reservar", ...pedido }) });
+    return r.json();
+  },
+
+  async listar(clave) {
+    if (MODO_DEMO) {
+      if (clave !== CONFIG.CLAVE_DEMO) return { ok: false, error: "Clave incorrecta" };
+      return { ok: true, entradas: this.leerLocal(), cupo: CONFIG.CUPO_DEMO, horas: CONFIG.HORAS_RESERVA };
+    }
+    const r = await fetch(CONFIG.API_URL + "?accion=listar&clave=" + encodeURIComponent(clave));
+    return r.json();
+  },
+
+  async cambiarEstado(clave, reserva, estado) {
+    if (MODO_DEMO) {
+      this.guardarLocal(this.leerLocal().map((e) => e.reserva === reserva ? { ...e, estado } : e));
+      return { ok: true, mailEnviado: false };
+    }
+    const r = await fetch(CONFIG.API_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ accion: "estado", clave, reserva, estado }) });
+    return r.json();
+  }
+};
+
+// Misma regla que el servidor: pagadas + pendientes que no vencieron
+function vencida(e) { return e.estado === "pendiente" && Date.now() - new Date(e.fecha).getTime() > CONFIG.HORAS_RESERVA * 3600e3; }
+function ocupadas(arr) { return arr.filter((e) => e.estado === "pagado" || (e.estado === "pendiente" && !vencida(e))).length; }
+
+/* ---------- COMPRA ---------- */
+let cantidad = 1;
+const borradores = []; // guarda lo tipeado aunque cambies la cantidad
+
+function guardarBorradores() {
+  document.querySelectorAll(".talon").forEach((t, i) => {
+    borradores[i] = { nombre: t.querySelector(".nom").value, apellido: t.querySelector(".ape").value };
+  });
+}
+
+function dibujarTalones() {
+  guardarBorradores();
+  const cont = $("talones");
+  cont.innerHTML = "";
+  for (let i = 0; i < cantidad; i++) {
+    const b = borradores[i] || { nombre: "", apellido: "" };
+    const t = document.createElement("div");
+    t.className = "talon";
+    t.innerHTML = `
+      <header><b>Entrada ${i + 1}</b><small>${i + 1} de ${cantidad}</small></header>
+      <div class="fila">
+        <label for="nom${i}">Nombre<input type="text" class="nom" id="nom${i}" autocomplete="${i === 0 ? "given-name" : "off"}" required></label>
+        <label for="ape${i}">Apellido<input type="text" class="ape" id="ape${i}" autocomplete="${i === 0 ? "family-name" : "off"}" required></label>
+      </div>`;
+    t.querySelector(".nom").value = b.nombre;
+    t.querySelector(".ape").value = b.apellido;
+    cont.appendChild(t);
+  }
+  $("cantidad").textContent = cantidad;
+  $("menos").disabled = cantidad <= 1;
+  $("mas").disabled = cantidad >= maxPermitido();
+  $("total").textContent = pesos(cantidad * CONFIG.PRECIO);
+  sugerirTitular();
+}
+
+// Si no escribió titular, sugerimos la entrada 1 (como placeholder, no como valor)
+function sugerirTitular() {
+  const n = $("nom0")?.value.trim(), a = $("ape0")?.value.trim();
+  $("titular").placeholder = n && a ? `${titulo(n)} ${titulo(a)}` : "Nombre y apellido del titular";
+}
+$("talones").addEventListener("input", sugerirTitular);
+
+/* ---------- CUPO ---------- */
+let quedan = Infinity; // hasta que conteste el servidor, no limitamos
+
+function maxPermitido() { return Math.max(1, Math.min(CONFIG.MAX_POR_COMPRA, quedan)); }
+
+function pintarCupo() {
+  const agotado = quedan <= 0;
+  $("agotado").hidden = !agotado;
+  if (agotado) $("compra").hidden = true;
+  const q = $("quedan");
+  q.hidden = agotado || quedan > 20;          // solo avisamos cuando quedan pocas
+  q.textContent = quedan === 1 ? "¡Queda 1 sola entrada!" : `¡Quedan solo ${quedan} entradas!`;
+  if (cantidad > maxPermitido()) cantidad = maxPermitido();
+  dibujarTalones();
+}
+
+async function cargarCupo() {
+  try { const r = await store.cupo(); if (r.ok) { quedan = r.quedan; pintarCupo(); } } catch {}
+}
+
+$("menos").onclick = () => { if (cantidad > 1) { cantidad--; dibujarTalones(); } };
+$("mas").onclick = () => { if (cantidad < maxPermitido()) { cantidad++; dibujarTalones(); } };
+
+$("compra").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const err = $("errCompra");
+  err.hidden = true;
+
+  const asistentes = [...document.querySelectorAll(".talon")].map((t) => ({
+    nombre: titulo(t.querySelector(".nom").value),
+    apellido: titulo(t.querySelector(".ape").value)
+  }));
+  const email = limpio($("email").value), tel = limpio($("tel").value);
+
+  const faltan = asistentes.findIndex((a) => a.nombre.length < 2 || a.apellido.length < 2);
+  if (faltan >= 0) { err.textContent = `Falta el nombre y apellido de la entrada ${faltan + 1}.`; err.hidden = false; $("nom" + faltan).focus(); return; }
+  if (!/^\S+@\S+\.\S+$/.test(email)) { err.textContent = "Revisá el mail: ahí te llegan las entradas, tiene que ser tipo nombre@gmail.com."; err.hidden = false; $("email").focus(); return; }
+  if (tel.replace(/\D/g, "").length < 8) { err.textContent = "Dejanos un WhatsApp por si tenemos que avisarte algo del pago."; err.hidden = false; $("tel").focus(); return; }
+  const titular = titulo($("titular").value) || `${asistentes[0].nombre} ${asistentes[0].apellido}`;
+
+  // La página manda solo los datos. Precio y cupo los decide el servidor.
+  const pedido = { asistentes, email, tel, titular };
+  const btn = $("btnReservar");
+  btn.disabled = true; btn.textContent = "Guardando reserva…";
+  try {
+    const res = await store.reservar(pedido);
+    if (!res.ok && res.error === "agotado") {
+      quedan = res.quedan;
+      pintarCupo();
+      if (quedan > 0) { err.textContent = `Solo quedan ${quedan} entradas. Bajá la cantidad y volvé a intentar.`; err.hidden = false; }
+      return;
+    }
+    if (!res.ok) { err.textContent = res.error || "No pudimos guardar la reserva."; err.hidden = false; return; }
+    mostrarPago({ ...pedido, reserva: res.reserva, total: res.total });
+    cargarCupo();
+  } catch (e) {
+    err.textContent = "No pudimos guardar la reserva. Revisá tu conexión y probá de nuevo.";
+    err.hidden = false;
+  } finally {
+    btn.disabled = false; btn.textContent = "Reservar mis entradas";
+  }
+});
+
+// Código de barras decorativo, distinto para cada reserva
+function dibujarBarras(semilla) {
+  const cont = $("barras"); cont.innerHTML = "";
+  [...(semilla + semilla)].forEach((ch) => {
+    const n = ch.charCodeAt(0);
+    [n % 4 + 1, (n >> 2) % 3 + 1, (n >> 4) % 4 + 1].forEach((w, j) => {
+      const b = document.createElement("i");
+      b.style.width = w + "px";
+      b.style.marginRight = (j === 2 ? 4 : 1) + "px";
+      cont.appendChild(b);
+    });
+  });
+}
+
+const TITULOS = ["¡Ya estás en la cuadra!", "¡Adentro!", "¡Hoy es hoy!", "¡Estás en la lista!"];
+
+function mostrarPago(p) {
+  $("confTitulo").textContent = p.asistentes.length > 1 ? "¡Ya están en la cuadra!" : TITULOS[Math.floor(Math.random() * TITULOS.length)];
+  $("totalPago").textContent = pesos(p.total);
+  document.querySelectorAll(".monto").forEach((m) => (m.textContent = pesos(p.total)));
+  document.querySelectorAll(".titularPaso").forEach((m) => (m.textContent = p.titular));
+  $("tkTitular").textContent = p.titular;
+  $("tkFecha").textContent = CONFIG.FECHA;
+  $("cierreFecha").textContent = CONFIG.FECHA_CORTA;
+  $("aliasPaso").textContent = CONFIG.ALIAS;
+  $("avisoHoras").textContent = `Te guardamos el lugar ${CONFIG.HORAS_RESERVA} horas. Si no transferís en ese tiempo, se libera.`;
+  $("resumenNombres").innerHTML = "";
+  p.asistentes.forEach((a, i) => {
+    const li = document.createElement("li");
+    const s = document.createElement("span"); s.textContent = String(i + 1).padStart(2, "0");
+    li.append(s, document.createTextNode(`${a.nombre} ${a.apellido}`));
+    $("resumenNombres").appendChild(li);
+  });
+  dibujarBarras(p.reserva);
+  $("linkMP").href = CONFIG.MP_LINK;
+  $("linkMP").textContent = `Transferir ${pesos(p.total)} con Mercado Pago`;
+  $("alias").textContent = CONFIG.ALIAS;
+  $("cvu").textContent = CONFIG.CVU;
+  $("titularMP").textContent = CONFIG.TITULAR;
+  $("compra").hidden = true;
+  $("pantallaPago").hidden = false;
+  // reinicia las animaciones (sacar y volver a poner la clase)
+  $("ticket").classList.remove("entra"); $("sello").classList.remove("golpe");
+  void $("ticket").offsetWidth;
+  $("ticket").classList.add("entra"); $("sello").classList.add("golpe");
+  $("pantallaPago").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+document.querySelectorAll(".copiar").forEach((b) => b.onclick = async () => {
+  const el = $(b.dataset.copiar);
+  try { await navigator.clipboard.writeText(el.textContent); b.textContent = "¡Copiado!"; }
+  catch { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent = "Seleccionado"; }
+  setTimeout(() => (b.textContent = "Copiar"), 1800);
+});
+
+$("otraCompra").onclick = () => {
+  borradores.length = 0; cantidad = 1;
+  document.querySelectorAll(".talon input").forEach((i) => (i.value = ""));
+  $("titular").value = "";
+  $("pantallaPago").hidden = true; $("compra").hidden = false;
+  pintarCupo();
+};
+
+/* ---------- PANEL DE ORGANIZACIÓN ---------- */
+let claveAdmin = "", entradas = [], cupoTotal = CONFIG.CUPO_DEMO, filtro = "pendiente";
+
+// No tiene botón visible. Se abre con #admin en el link o tocando 5 veces el logo.
+function abrirAdmin() { $("admin").hidden = false; $("admin").scrollIntoView({ behavior: "smooth" }); $("clave").focus(); }
+if (location.hash === "#admin") abrirAdmin();
+addEventListener("hashchange", () => { if (location.hash === "#admin") abrirAdmin(); });
+let toques = 0, toqueTimer;
+document.querySelector(".cartel .logo").addEventListener("click", () => {
+  toques++; clearTimeout(toqueTimer);
+  toqueTimer = setTimeout(() => (toques = 0), 1500);
+  if (toques >= 5) { toques = 0; abrirAdmin(); }
+});
+
+$("loginAdmin").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  claveAdmin = $("clave").value;
+  await cargarLista();
+});
+
+async function cargarLista() {
+  const e = $("errAdmin"); e.hidden = true;
+  try {
+    const res = await store.listar(claveAdmin);
+    if (!res.ok) { e.textContent = res.error || "Clave incorrecta."; e.hidden = false; return; }
+    entradas = res.entradas;
+    cupoTotal = res.cupo || cupoTotal;
+    $("loginAdmin").hidden = true;
+    $("panelAdmin").hidden = false;
+    dibujarReservas();
+  } catch { e.textContent = "No se pudo conectar con la planilla."; e.hidden = false; }
+}
+
+// Las filas son por persona; para cobrar conviene verlas agrupadas por reserva
+function agrupar() {
+  const m = new Map();
+  entradas.forEach((e) => {
+    if (!m.has(e.reserva)) m.set(e.reserva, { ...e, nombres: [] });
+    m.get(e.reserva).nombres.push(`${e.nombre} ${e.apellido}`);
+  });
+  return [...m.values()].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+}
+
+function haceCuanto(f) {
+  const min = Math.round((Date.now() - new Date(f).getTime()) / 60000);
+  if (min < 60) return `hace ${min} min`;
+  const h = Math.round(min / 60);
+  return h < 48 ? `hace ${h} h` : `hace ${Math.round(h / 24)} días`;
+}
+
+function linkWhatsApp(tel) {
+  let d = String(tel).replace(/\D/g, "").replace(/^0/, "");
+  if (!d.startsWith("54")) d = "549" + d;
+  return `https://wa.me/${d}?text=${encodeURIComponent("¡Hola! Te escribimos de Los Hijos del Dueño por tu reserva para SIMONA.")}`;
+}
+
+function dibujarReservas() {
+  const pagas = entradas.filter((x) => x.estado === "pagado").length;
+  const pend = entradas.filter((x) => x.estado === "pendiente" && !vencida(x)).length;
+  $("sPagas").textContent = pagas;
+  $("sPend").textContent = pend;
+  $("sQuedan").textContent = Math.max(0, cupoTotal - pagas - pend);
+
+  const q = normal($("buscar").value.trim());
+  const lista = agrupar().filter((r) =>
+    (filtro === "todas" || r.estado === filtro) &&
+    (!q || normal(r.titular + " " + r.nombres.join(" ") + " " + r.email).includes(q)));
+
+  const cont = $("reservas"); cont.innerHTML = "";
+  if (!lista.length) {
+    const v = document.createElement("div"); v.className = "vacio";
+    v.textContent = q ? "No hay reservas con ese nombre. Probá con el apellido solo."
+      : filtro === "pendiente" ? "No hay nada por cobrar. Cuando alguien reserve, aparece acá."
+      : "Todavía no hay reservas en esta lista.";
+    cont.appendChild(v); return;
+  }
+
+  lista.forEach((r) => {
+    const venc = vencida(r);
+    const card = document.createElement("div");
+    card.className = "res " + (r.estado === "pagado" ? "pagado" : venc ? "vencida" : "");
+    card.innerHTML = `
+      <div class="res-top"><b></b><span class="monto"></span></div>
+      <div class="res-sub"></div>
+      <ul></ul>
+      <div class="res-acc"></div>`;
+    card.querySelector(".res-top b").textContent = r.titular;
+    card.querySelector(".monto").textContent = pesos(r.total);
+    card.querySelector(".res-sub").textContent = `${r.nombres.length} entrada${r.nombres.length > 1 ? "s" : ""} · ${haceCuanto(r.fecha)} · ${r.email}`;
+    r.nombres.forEach((n) => { const li = document.createElement("li"); li.textContent = n; card.querySelector("ul").appendChild(li); });
+
+    const acc = card.querySelector(".res-acc");
+    if (r.estado === "pagado") {
+      const b = document.createElement("span"); b.className = "badge"; b.textContent = "Pagado · entradas enviadas";
+      const d = document.createElement("button"); d.className = "deshacer"; d.type = "button"; d.textContent = "Deshacer";
+      d.onclick = () => cambiar(r, "pendiente", d);
+      acc.append(b, d);
+    } else {
+      if (venc) { const b = document.createElement("span"); b.className = "badge venc"; b.textContent = "Vencida"; acc.appendChild(b); }
+      const c = document.createElement("button"); c.className = "confirmar"; c.type = "button";
+      c.textContent = "Confirmar pago y enviar entradas";
+      c.onclick = () => cambiar(r, "pagado", c);
+      acc.appendChild(c);
+    }
+    const w = document.createElement("a");
+    w.href = linkWhatsApp(r.tel); w.target = "_blank"; w.rel = "noopener"; w.textContent = "WhatsApp";
+    acc.appendChild(w);
+    cont.appendChild(card);
+  });
+}
+
+async function cambiar(r, estado, boton) {
+  const msg = $("msgAdmin");
+  boton.disabled = true;
+  boton.textContent = estado === "pagado" ? "Enviando entradas…" : "Deshaciendo…";
+  const res = await store.cambiarEstado(claveAdmin, r.reserva, estado).catch(() => ({ ok: false }));
+  if (res.ok) {
+    entradas.forEach((e) => { if (e.reserva === r.reserva) e.estado = estado; });
+    msg.textContent = estado === "pagado"
+      ? (MODO_DEMO ? `Pago de ${r.titular} confirmado. (En modo prueba no se mandan mails.)` : `Listo: le mandamos ${r.nombres.length > 1 ? "las entradas" : "la entrada"} a ${r.email}.`)
+      : `La reserva de ${r.titular} volvió a "por cobrar".`;
+  } else {
+    msg.textContent = "No se pudo guardar el cambio. Revisá la conexión y probá de nuevo.";
+  }
+  msg.hidden = false;
+  dibujarReservas();
+}
+
+$("buscar").addEventListener("input", dibujarReservas);
+document.querySelectorAll(".chip").forEach((c) => c.onclick = () => {
+  filtro = c.dataset.f;
+  document.querySelectorAll(".chip").forEach((o) => o.setAttribute("aria-pressed", o === c));
+  dibujarReservas();
+});
+$("btnRefrescar").onclick = cargarLista;
+
+// La lista de puerta: solo las entradas pagadas, una fila por persona, por apellido
+$("btnPDF").onclick = async () => {
+  const msg = $("msgAdmin");
+  const lista = entradas
+    .filter((x) => x.estado === "pagado")
+    .sort((a, b) => a.apellido.localeCompare(b.apellido, "es") || a.nombre.localeCompare(b.nombre, "es"));
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  doc.setFont("helvetica", "bold"); doc.setFontSize(18);
+  doc.text("LOS HIJOS DEL DUEÑO · LISTA DE PUERTA", 14, 18);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(11);
+  doc.text(`SIMONA · Av. Álvarez Thomas 661, CABA · ${CONFIG.FECHA}`, 14, 25);
+  doc.text(`Puertas 21:00 · Show 22:00 · ${lista.length} entradas pagadas`, 14, 31);
+  doc.autoTable({
+    startY: 37,
+    head: [["#", "Apellido", "Nombre", "Compró", "Ingresó"]],
+    body: lista.map((x, i) => [i + 1, x.apellido, x.nombre, x.titular, ""]),
+    styles: { fontSize: 10, cellPadding: 2.5 },
+    headStyles: { fillColor: [31, 158, 143] },
+    columnStyles: { 0: { cellWidth: 10 }, 4: { cellWidth: 18 } }
+  });
+  const nombre = "lista-puerta-lhdd-simona.pdf";
+  try {
+    const dl = window.claude?.use ? await window.claude.use("downloads") : null;
+    if (dl) { await dl.save({ filename: nombre, data: doc.output("blob") }); }
+    else { doc.save(nombre); }  // en Netlify, GitHub Pages o cualquier hosting normal
+    msg.textContent = `PDF listo con ${lista.length} entradas pagadas.`; msg.hidden = false;
+  } catch (e) {
+    if (e?.code !== "declined") { msg.textContent = "No se pudo descargar el PDF."; msg.hidden = false; }
+  }
+};
+
+/* ---------- arranque ---------- */
+$("fecha").textContent = CONFIG.FECHA;
+$("precioUnit").textContent = pesos(CONFIG.PRECIO);
+$("avisoDemo").hidden = !MODO_DEMO;
+dibujarTalones();
+cargarCupo();
+</script>
+
+</body>
+</html>
