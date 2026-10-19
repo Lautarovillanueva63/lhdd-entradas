@@ -632,7 +632,7 @@ function dibujarReservas() {
   lista.forEach((r) => {
     const venc = vencida(r);
     const card = document.createElement("div");
-    card.className = "res " + (r.estado === "pagado" ? "pagado" : venc ? "vencida" : "");
+    card.className = "res " + (r.estado === "pagado" ? "pagado" : (venc || r.estado === "cancelada") ? "vencida" : "");
     card.innerHTML = `
       <div class="res-top"><b></b><span class="monto"></span></div>
       <div class="res-sub"></div>
@@ -644,9 +644,14 @@ function dibujarReservas() {
     r.nombres.forEach((n) => { const li = document.createElement("li"); li.textContent = n; card.querySelector("ul").appendChild(li); });
 
     const acc = card.querySelector(".res-acc");
-    if (r.estado === "pagado") {
+    if (r.estado === "cancelada") {
+      const b = document.createElement("span"); b.className = "badge venc"; b.textContent = "Cancelada";
+      const d = document.createElement("button"); d.className = "deshacer"; d.type = "button"; d.textContent = "Reactivar";
+      d.onclick = () => cambiar(r, "pendiente", d);
+      acc.append(b, d);
+    } else if (r.estado === "pagado") {
       const b = document.createElement("span"); b.className = "badge"; b.textContent = "Pagado · entradas enviadas";
-      const d = document.createElement("button"); d.className = "deshacer"; d.type = "button"; d.textContent = "Deshacer";
+      const d = document.createElement("button"); d.className = "deshacer"; d.type = "button"; d.textContent = "Deshacer pago";
       d.onclick = () => cambiar(r, "pendiente", d);
       acc.append(b, d);
     } else {
@@ -656,6 +661,7 @@ function dibujarReservas() {
       c.onclick = () => cambiar(r, "pagado", c);
       acc.appendChild(c);
     }
+    if (r.estado !== "cancelada") acc.appendChild(botonCancelar(r));
     const w = document.createElement("a");
     w.href = linkWhatsApp(r.tel); w.target = "_blank"; w.rel = "noopener"; w.textContent = "WhatsApp";
     acc.appendChild(w);
@@ -663,16 +669,40 @@ function dibujarReservas() {
   });
 }
 
+// Cancelar pide dos toques: el primero arma el botón, el segundo confirma.
+// (Las ventanitas de confirm() del navegador no son confiables en celulares ni en todos los visores.)
+function botonCancelar(r) {
+  const b = document.createElement("button");
+  b.className = "deshacer"; b.type = "button"; b.textContent = "Cancelar reserva";
+  let armado = false, t;
+  b.onclick = () => {
+    if (!armado) {
+      armado = true;
+      b.textContent = "¿Seguro? Tocá de nuevo";
+      b.style.color = "var(--err)"; b.style.borderColor = "var(--err)";
+      t = setTimeout(() => { armado = false; b.textContent = "Cancelar reserva"; b.style.color = ""; b.style.borderColor = ""; }, 4000);
+      return;
+    }
+    clearTimeout(t);
+    cambiar(r, "cancelada", b);
+  };
+  return b;
+}
+
 async function cambiar(r, estado, boton) {
   const msg = $("msgAdmin");
+  const estabaPagada = r.estado === "pagado";
   boton.disabled = true;
-  boton.textContent = estado === "pagado" ? "Enviando entradas…" : "Deshaciendo…";
+  boton.textContent = estado === "pagado" ? "Enviando entradas…" : estado === "cancelada" ? "Cancelando…" : "Guardando…";
   const res = await store.cambiarEstado(claveAdmin, r.reserva, estado).catch(() => ({ ok: false }));
   if (res.ok) {
     entradas.forEach((e) => { if (e.reserva === r.reserva) e.estado = estado; });
     msg.textContent = estado === "pagado"
       ? (MODO_DEMO ? `Pago de ${r.titular} confirmado. (En modo prueba no se mandan mails.)` : `Listo: le mandamos ${r.nombres.length > 1 ? "las entradas" : "la entrada"} a ${r.email}.`)
-      : `La reserva de ${r.titular} volvió a "por cobrar".`;
+      : estado === "cancelada"
+        ? `Reserva de ${r.titular} cancelada: ${r.nombres.length > 1 ? `se liberaron ${r.nombres.length} lugares` : "se liberó 1 lugar"}.` +
+          (estabaPagada ? " Ya tenía las entradas por mail: avisale por WhatsApp y devolvele la plata." : "")
+        : `La reserva de ${r.titular} volvió a "por cobrar".`;
   } else {
     msg.textContent = "No se pudo guardar el cambio. Revisá la conexión y probá de nuevo.";
   }
