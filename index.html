@@ -176,8 +176,8 @@ input[type=text],input[type=email],input[type=tel],input[type=password],input[ty
     <div class="fecha" id="fecha"></div>
     <div class="datos">
       <div><small>Lugar</small><strong>SIMONA</strong></div>
-      <div><small>Puertas</small><strong>21:00</strong></div>
-      <div><small>Show</small><strong>22:00</strong></div>
+      <div><small>Puertas</small><strong>20:15</strong></div>
+      <div><small>Show</small><strong>21:30</strong></div>
     </div>
     <div class="dir">Av. Álvarez Thomas 661, CABA</div>
   </section>
@@ -232,7 +232,7 @@ input[type=text],input[type=email],input[type=tel],input[type=password],input[ty
           <small>Los Hijos del Dueño en</small>
           <b>SIMONA</b>
           <span id="tkFecha"></span>
-          <span>Puertas 21 h · Show 22 h</span>
+          <span>Puertas 20:15 h · Show 21:30 h</span>
         </div>
         <div class="sello" id="sello">RESERVADO</div>
       </div>
@@ -735,7 +735,7 @@ $("btnPDF").onclick = async () => {
   doc.text("LOS HIJOS DEL DUEÑO · LISTA DE PUERTA", 14, 18);
   doc.setFont("helvetica", "normal"); doc.setFontSize(11);
   doc.text(`SIMONA · Av. Álvarez Thomas 661, CABA · ${CONFIG.FECHA}`, 14, 25);
-  doc.text(`Puertas 21:00 · Show 22:00 · ${lista.length} entradas pagadas`, 14, 31);
+  doc.text(`Puertas 20:15 · Show 21:30 · ${lista.length} entradas pagadas`, 14, 31);
   doc.autoTable({
     startY: 37,
     head: [["#", "Apellido", "Nombre", "Compró", "Ingresó"]],
