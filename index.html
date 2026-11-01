@@ -704,9 +704,14 @@ async function cambiar(r, estado, boton) {
           (estabaPagada ? " Ya tenía las entradas por mail: avisale por WhatsApp y devolvele la plata." : "")
         : `La reserva de ${r.titular} volvió a "por cobrar".`;
   } else {
-    msg.textContent = "No se pudo guardar el cambio. Revisá la conexión y probá de nuevo.";
+    // Mostramos el error real que manda el servidor, así sabemos qué pasó
+    msg.textContent = res.error || "No se pudo guardar el cambio. Revisá la conexión y probá de nuevo.";
   }
   msg.hidden = false;
+  // La planilla es la fuente de verdad: después de cada cambio, volvemos a leerla
+  if (!MODO_DEMO) {
+    try { const l = await store.listar(claveAdmin); if (l.ok) entradas = l.entradas; } catch {}
+  }
   dibujarReservas();
 }
 
